@@ -2,32 +2,36 @@
   "name": "frontend-project-lvl3",
   "version": "0.1.0",
   "description": "RSS aggregator",
-  "type": "module",
   "private": true,
   "scripts": {
-    "test": "jest --colors"
+    "test": "jest --colors",
+    "build": "webpack --mode production",
+    "start": "webpack-dev-server --mode development"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hexlet-boilerplates/webpack-package.git"
+    "url": "git+https://github.com/sdwayy/frontend-project-lvl3.git"
   },
   "author": "Daniil Pugachev",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/hexlet-boilerplates/webpack-package/issues"
-  },
-  "homepage": "https://github.com/hexlet-boilerplates/webpack-package#readme",
   "jest": {
     "verbose": true,
     "testURL": "http://localhost/"
   },
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^0.20.0",
+    "bootstrap": "^4.5.2",
+    "jquery": "^3.5.1",
+    "on-change": "^2.1.2",
+    "popper.js": "^1.16.1"
+  },
   "devDependencies": {
     "@babel/core": "^7.10.3",
     "@babel/preset-env": "^7.10.3",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.1.0",
     "babel-loader": "^8.1.0",
+    "css-loader": "^4.3.0",
     "debug": "^4.1.1",
     "eslint": "^7.3.1",
     "eslint-config-airbnb": "^18.2.0",
@@ -37,6 +41,7 @@
     "html-webpack-plugin": "^4.3.0",
     "jest": "^26.1.0",
     "jest-cli": "^26.1.0",
+    "style-loader": "^1.2.1",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"

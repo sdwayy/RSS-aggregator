@@ -1,5 +1,4 @@
 // @ts-check
 
-import init from './init';
-
-init();
+import bootstrap from 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
