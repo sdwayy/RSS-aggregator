@@ -4,18 +4,18 @@ import i18next from 'i18next';
 import _ from 'lodash';
 import en from './locales/en.js';
 import parseRss from './rss-parser.js';
-import createWatcher from './watchers.js';
+import createWatcher from './watchers/index.js';
 
 const UPDATE_DELAY_MS = 5000;
 
 const getProxyUrl = (url) => {
-  const proxy = 'https://cors-anywhere.herokuapp.com/';
+  const proxy = 'https://cors-anywhere.herokuapp.com';
 
-  return `${proxy}${url}`;
+  return `${proxy}/${url}`;
 };
 
 const validateUrl = (url, feeds) => {
-  const urlList = feeds.map((feed) => feed.id);
+  const urlList = feeds.map((feed) => feed.url);
 
   const schema = yup
     .string()
@@ -25,17 +25,13 @@ const validateUrl = (url, feeds) => {
 
   try {
     schema.validateSync(url);
-    return 'valid';
+    return null;
   } catch (error) {
     return error.message;
   }
 };
 
-const getFeedPosts = (rssData, rssUrl) => rssData
-  .items
-  .map((post) => ({ ...post, feedID: rssUrl }));
-
-export default function app() {
+const startUpApp = () => {
   const elements = {
     form: document.querySelector('form'),
     feeds: document.querySelector('.feeds'),
@@ -47,9 +43,12 @@ export default function app() {
   const state = {
     form: {
       url: null,
-      status: 'filling',
-      errors: [],
-      isValid: false,
+      status: 'enabled',
+      error: '',
+    },
+    load: {
+      status: 'idle',
+      error: '',
     },
     feeds: [],
     posts: [],
@@ -62,26 +61,28 @@ export default function app() {
     .then((response) => {
       const rssData = parseRss(response);
       const { title, description } = rssData;
-      const feedPosts = getFeedPosts(rssData, feedUrl);
+      const feedPosts = rssData
+        .items
+        .map((post) => ({ ...post, feedUrl }));
 
       stateWatcher.feeds.push({
-        id: feedUrl,
+        url: feedUrl,
         title,
         description,
       });
       stateWatcher.posts = [...state.posts, ...feedPosts];
-      stateWatcher.form.status = 'success';
     })
     .catch(() => {
-      stateWatcher.form.status = 'failed';
-      stateWatcher.form.errors = ['networkProblem'];
+      throw new Error('networkProblem');
     });
 
   const updatePosts = (feedUrl) => axios
     .get(getProxyUrl(feedUrl))
     .then((response) => {
       const rssData = parseRss(response);
-      const feedPosts = getFeedPosts(rssData, feedUrl);
+      const feedPosts = rssData
+        .items
+        .map((post) => ({ ...post, feedUrl }));
       const newPosts = _.differenceWith(feedPosts, state.posts, _.isEqual);
 
       if (newPosts.length > 0) {
@@ -92,47 +93,65 @@ export default function app() {
       throw new Error('updatePostsFailed');
     });
 
-  const autoPostsUpdate = (feedUrl) => setTimeout(() => {
-    updatePosts(feedUrl)
-      .then(() => autoPostsUpdate(feedUrl))
-      .catch((error) => {
-        stateWatcher.form.errors = [error.message];
-      });
-  }, UPDATE_DELAY_MS);
+  const autoUpdatePosts = () => {
+    const promises = state.feeds.map((feed) => updatePosts(feed.url));
+
+    return setTimeout(() => {
+      Promise.all(promises)
+        .then(() => {
+          autoUpdatePosts();
+        })
+        .catch((error) => {
+          stateWatcher.load.error = error.message;
+        });
+    }, UPDATE_DELAY_MS);
+  };
 
   const submitHandler = (evt) => {
     evt.preventDefault();
 
     const formData = new FormData(evt.target);
     const url = formData.get('url').trim();
-    const urlValidationResult = validateUrl(url, state.feeds);
+    const validationError = validateUrl(url, state.feeds);
 
     stateWatcher.form.url = url;
 
-    if (urlValidationResult === 'valid') {
-      stateWatcher.form.isValid = true;
-      stateWatcher.form.errors = [];
+    if (!validationError) {
+      stateWatcher.form.status = 'valid';
+      stateWatcher.form.error = '';
     } else {
-      stateWatcher.form.isValid = false;
-      stateWatcher.form.errors = [urlValidationResult];
+      stateWatcher.form.status = 'invalid';
+      stateWatcher.form.error = validationError;
     }
 
-    if (state.form.isValid) {
-      stateWatcher.form.status = 'sending';
+    if (state.form.status === 'valid') {
+      stateWatcher.load.status = 'pending';
+      stateWatcher.form.status = 'disabled';
+
       requestFeed(url)
-        .then(() => autoPostsUpdate(url));
-    } else {
-      stateWatcher.form.status = 'failed';
+        .then(() => {
+          stateWatcher.load.status = 'success';
+        })
+        .catch((error) => {
+          stateWatcher.load.status = 'failed';
+          stateWatcher.load.error = error.message;
+        })
+        .finally(() => {
+          stateWatcher.form.status = 'enabled';
+        });
     }
   };
 
+  window.addEventListener('load', () => autoUpdatePosts());
+  elements.form.addEventListener('submit', submitHandler);
+};
+
+export default function app() {
   i18next.init({
     lng: 'en',
     debug: true,
     resources: {
       en,
     },
-  });
-
-  elements.form.addEventListener('submit', submitHandler);
+  }).then(() => startUpApp());
 }
