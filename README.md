@@ -3,4 +3,8 @@
 # Frontend-project-lvl3
 ## Simple RSS aggregator with autoupdate for simple reading 
 ***
+<<<<<<< HEAD
 ### [Just try it](https://rss-reader-hopmng3zx.vercel.app/)
+=======
+### [Just try it](https://rss-reader-9904119cw.vercel.app/)
+>>>>>>> d248169aacaf6e4f514c9783c86faf70c0815e69

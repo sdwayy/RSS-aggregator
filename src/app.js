@@ -86,7 +86,7 @@ const startUpApp = () => {
       const newPosts = _.differenceWith(feedPosts, state.posts, _.isEqual);
 
       if (newPosts.length > 0) {
-        stateWatcher.posts = [...state.posts, ...newPosts];
+        stateWatcher.posts = [...newPosts, ...state.posts];
       }
     })
     .catch(() => {
@@ -98,9 +98,7 @@ const startUpApp = () => {
 
     return setTimeout(() => {
       Promise.all(promises)
-        .then(() => {
-          autoUpdatePosts();
-        })
+        .then(autoUpdatePosts)
         .catch((error) => {
           stateWatcher.load.error = error.message;
         });
@@ -142,7 +140,7 @@ const startUpApp = () => {
     }
   };
 
-  window.addEventListener('load', () => autoUpdatePosts());
+  window.addEventListener('load', autoUpdatePosts);
   elements.form.addEventListener('submit', submitHandler);
 };
 
@@ -153,5 +151,5 @@ export default function app() {
     resources: {
       en,
     },
-  }).then(() => startUpApp());
+  }).then(startUpApp);
 }
