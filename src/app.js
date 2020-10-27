@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as yup from 'yup';
 import i18next from 'i18next';
 import _ from 'lodash';
-import en from './locales/en.js';
+import resources from './locales/index.js';
 import parseRss from './rss-parser.js';
 import createWatcher from './watchers/index.js';
 
@@ -34,10 +34,10 @@ const validateUrl = (url, feeds) => {
 const startUpApp = () => {
   const elements = {
     form: document.querySelector('form'),
-    feeds: document.querySelector('.feeds'),
+    feedsContainer: document.querySelector('.feeds'),
     urlInput: document.querySelector('input[name=url]'),
-    btn: document.querySelector('button[type=submit]'),
-    feedback: document.querySelector('.feedback'),
+    submitButton: document.querySelector('button[type=submit]'),
+    feedbackContainer: document.querySelector('.feedback'),
   };
 
   const state = {
@@ -144,12 +144,11 @@ const startUpApp = () => {
   elements.form.addEventListener('submit', submitHandler);
 };
 
-export default function app() {
+export default new Promise((resolve) => {
   i18next.init({
     lng: 'en',
-    debug: true,
-    resources: {
-      en,
-    },
-  }).then(startUpApp);
-}
+    resources,
+  })
+    .then(startUpApp)
+    .then(resolve);
+});

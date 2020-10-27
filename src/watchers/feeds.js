@@ -47,7 +47,7 @@ const renderFeed = (feedData, container, state) => {
 
 export default (state, elements) => {
   const { feeds } = state;
-  const { feeds: feedsContainer } = elements;
+  const { feedsContainer } = elements;
 
   feedsContainer.innerHTML = '';
   feeds.forEach((feed) => renderFeed(feed, feedsContainer, state));

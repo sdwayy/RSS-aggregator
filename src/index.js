@@ -1,6 +1,6 @@
 // @ts-check
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-import app from './app.js';
+import initApp from './app.js';
 
-app();
+initApp.then(() => console.log('App is started'));
