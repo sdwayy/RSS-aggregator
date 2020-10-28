@@ -144,11 +144,10 @@ const startUpApp = () => {
   elements.form.addEventListener('submit', submitHandler);
 };
 
-export default () => new Promise((resolve) => {
-  i18next.init({
+export default () => i18next.init(
+  {
     lng: 'en',
     resources,
-  })
-    .then(startUpApp)
-    .then(resolve);
-});
+  },
+)
+  .then(startUpApp);
